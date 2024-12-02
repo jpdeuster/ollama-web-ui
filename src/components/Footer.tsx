@@ -1,5 +1,6 @@
 import React from 'react';
 import { Github, Mail, Code2, Heart } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export function Footer() {
   const currentYear = new Date().getFullYear();
@@ -39,7 +40,7 @@ export function Footer() {
           {/* Links */}
           <div className="flex items-center gap-4">
             <a
-              href="https://github.com/yourusername/ollama-web-ui"
+              href="https://github.com/jpdeuster/ollama-web-ui"
               target="_blank"
               rel="noopener noreferrer"
               className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -48,7 +49,7 @@ export function Footer() {
               <Github size={20} />
             </a>
             <a
-              href="mailto:jp@deuster.eu"
+              href="mailto:jp@deuster-development.de"
               className="text-gray-600 hover:text-gray-900 transition-colors"
               title="Kontakt"
             >
@@ -64,9 +65,9 @@ export function Footer() {
             Alle Produktnamen, Logos und Marken sind Eigentum ihrer jeweiligen Inhaber.
           </p>
           <div className="mt-2 flex justify-center gap-4">
-            <a href="/datenschutz" className="hover:text-gray-700">Datenschutz</a>
-            <a href="/impressum" className="hover:text-gray-700">Impressum</a>
-            <a href="/nutzungsbedingungen" className="hover:text-gray-700">Nutzungsbedingungen</a>
+            <Link to="/datenschutz" className="hover:text-gray-700">Datenschutz</Link>
+            <Link to="/impressum" className="hover:text-gray-700">Impressum</Link>
+            <Link to="/nutzungsbedingungen" className="hover:text-gray-700">Nutzungsbedingungen</Link>
           </div>
         </div>
       </div>
