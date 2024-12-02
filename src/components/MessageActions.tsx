@@ -1,131 +1,70 @@
-import React, { useState, useEffect } from 'react';
-import { Save, RefreshCw, Volume2, Copy, Check } from 'lucide-react';
+import React, { useState } from 'react';
+import { Volume2, Square, Copy, Check, Save, RefreshCw } from 'lucide-react';
 
 interface MessageActionsProps {
   content: string;
   onRegenerate?: () => void;
-  onSave?: () => void;
-  onSpeak?: () => void;
   isAssistant: boolean;
 }
 
 interface Language {
   code: string;
   name: string;
-  voices: SpeechSynthesisVoice[];
+  voiceNames: string[];
 }
 
-export function MessageActions({ content, onRegenerate, onSave, onSpeak, isAssistant }: MessageActionsProps) {
+export function MessageActions({ content, onRegenerate, isAssistant }: MessageActionsProps) {
   const [copied, setCopied] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showLanguages, setShowLanguages] = useState(false);
-  const [availableLanguages, setAvailableLanguages] = useState<Language[]>([]);
-
-  // Vordefinierte Liste von Sprachen
-  const predefinedLanguages = [
-    { code: 'de', name: 'Deutsch' },
-    { code: 'en', name: 'Englisch' },
-    { code: 'fr', name: 'Französisch' },
-    { code: 'es', name: 'Spanisch' },
-    { code: 'it', name: 'Italienisch' }
+  
+  // Vordefinierte Sprachen mit optimierten Stimmen
+  const languages: Language[] = [
+    { code: 'de-DE', name: 'Deutsch', voiceNames: ['Anna'] },
+    { code: 'en-US', name: 'Englisch', voiceNames: ['Samantha'] },
+    { code: 'fr-FR', name: 'Französisch', voiceNames: ['Thomas'] },
+    { code: 'es-ES', name: 'Spanisch', voiceNames: ['Paulina'] },
+    { code: 'it-IT', name: 'Italienisch', voiceNames: ['Alice'] }
   ];
 
-  useEffect(() => {
-    const initVoices = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const languageMap = new Map<string, Language>();
-
-      voices.forEach(voice => {
-        const langCode = voice.lang.split('-')[0];
-        if (predefinedLanguages.some(lang => lang.code === langCode)) {
-          if (!languageMap.has(langCode)) {
-            const langName = predefinedLanguages.find(lang => lang.code === langCode)?.name || langCode;
-            languageMap.set(langCode, {
-              code: langCode,
-              name: langName,
-              voices: []
-            });
-          }
-          languageMap.get(langCode)?.voices.push(voice);
-        }
-      });
-
-      setAvailableLanguages(Array.from(languageMap.values())
-        .filter(lang => lang.voices.length > 0)
-        .sort((a, b) => a.name.localeCompare(b.name)));
-    };
-
-    if (typeof window !== 'undefined' && window.speechSynthesis) {
-      if (window.speechSynthesis.getVoices().length > 0) {
-        initVoices();
-      }
-      window.speechSynthesis.onvoiceschanged = initVoices;
-    }
-
-    return () => {
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.onvoiceschanged = null;
-      }
-    };
-  }, []);
-
-  const handleSave = () => {
-    let formattedContent = content;
-    if (content.includes('```')) {
-      formattedContent = content
-        .split('\n')
-        .map(line => line.trim())
-        .join('\n');
-    }
-    const blob = new Blob([formattedContent], { type: 'text/markdown' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'ollama-antwort.md';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const handleSpeak = (language: Language) => {
-    window.speechSynthesis.cancel();
-
-    let textToSpeak = content.replace(/```[\s\S]*?```/g, 'Code-Block ausgelassen');
-    textToSpeak = textToSpeak.replace(/`.*?`/g, '');
+  // Sprachausgabe mit Fehlerbehandlung
+  const speak = (text: string, langCode: string) => {
+    const synthesis = window.speechSynthesis;
+    const utterance = new SpeechSynthesisUtterance(text);
+    const voices = synthesis.getVoices();
+    const selectedLang = languages.find(l => l.code === langCode);
     
-    const utterance = new SpeechSynthesisUtterance(textToSpeak);
-    
-    // Bevorzuge macOS-Stimmen
-    const voice = language.voices.find(v => 
-      v.name.includes('Anna') || // Deutsche Premium-Stimme
-      v.name.includes('Helena') || // Alternative deutsche Stimme
-      v.localService // Fallback auf andere lokale Stimmen
-    ) || language.voices[0];
+    // Flexiblere Stimmenauswahl mit Fallback
+    const voice = voices.find(v => 
+      v.lang.includes(langCode.split('-')[0]) &&
+      (selectedLang?.voiceNames ? 
+        selectedLang.voiceNames.some(name => v.name.includes(name)) : 
+        true) &&
+      (v.localService || true)
+    ) || voices.find(v => v.lang.includes(langCode.split('-')[0]));
 
-    console.log('Verfügbare Stimmen:', language.voices.map(v => v.name)); // Debug-Info
-    console.log('Gewählte Stimme:', voice?.name); // Debug-Info
-    
     if (voice) {
       utterance.voice = voice;
-      utterance.lang = voice.lang;
-      // Optimierte Einstellungen für macOS-Stimmen
-      utterance.rate = 1.0; // Normale Geschwindigkeit
-      utterance.pitch = 1.0; // Normale Tonhöhe
-      utterance.volume = 1.0; // Volle Lautstärke
-    }
-    
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = (event) => {
-      console.error('Sprachausgabe-Fehler:', event);
-      setIsSpeaking(false);
-    };
+      utterance.lang = langCode;
+      utterance.rate = 1.0;
+      utterance.pitch = 1.0;
+      utterance.volume = 1.0;
 
-    window.speechSynthesis.speak(utterance);
-    setShowLanguages(false);
+      utterance.onstart = () => setIsSpeaking(true);
+      utterance.onend = () => setIsSpeaking(false);
+      utterance.onerror = (event) => {
+        console.error('Fehler beim Abspielen der Stimme:', event);
+        setIsSpeaking(false);
+      };
+
+      synthesis.speak(utterance);
+    } else {
+      console.error(`Keine kompatible Stimme für ${selectedLang?.name || langCode} gefunden`);
+      setIsSpeaking(false);
+    }
   };
 
+  // Kopieren in die Zwischenablage
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(content);
@@ -136,11 +75,13 @@ export function MessageActions({ content, onRegenerate, onSave, onSpeak, isAssis
     }
   };
 
-  const stopSpeaking = () => {
+  // Stoppen der Sprachausgabe
+  const handleStop = () => {
     window.speechSynthesis.cancel();
     setIsSpeaking(false);
   };
 
+  // Nur für Assistenten-Nachrichten anzeigen
   if (!isAssistant) return null;
 
   return (
@@ -152,49 +93,44 @@ export function MessageActions({ content, onRegenerate, onSave, onSpeak, isAssis
       >
         {copied ? <Check size={16} className="text-green-500" /> : <Copy size={16} />}
       </button>
-      <button
-        onClick={handleSave}
-        className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
-        title="Als Markdown speichern"
-      >
-        <Save size={16} />
-      </button>
-      <button
-        onClick={onRegenerate}
-        className="p-1 text-gray-500 hover:text-gray-700 transition-colors"
-        title="Antwort neu generieren"
-      >
-        <RefreshCw size={16} />
-      </button>
+
+      {onRegenerate && (
+        <button
+          onClick={onRegenerate}
+          className="text-gray-500 hover:text-gray-700 p-1 rounded"
+          title="Regenerate"
+        >
+          <RefreshCw size={16} />
+        </button>
+      )}
+      
+      {/* Sprach-Button mit Dropdown */}
       <div className="relative">
         <button
-          onClick={() => {
-            if (isSpeaking) {
-              stopSpeaking();
-            } else {
-              setShowLanguages(!showLanguages);
-            }
-          }}
-          className={`p-1 transition-colors ${
-            isSpeaking ? 'text-blue-500' : 'text-gray-500 hover:text-gray-700'
-          }`}
-          title={isSpeaking ? "Vorlesen stoppen" : "Vorlesen"}
+          onClick={() => !isSpeaking && setShowLanguages(!showLanguages)}
+          className="text-gray-500 hover:text-gray-700 p-1 rounded flex items-center gap-1"
+          title="Text vorlesen"
         >
-          <Volume2 size={16} />
+          {isSpeaking ? (
+            <Square size={16} onClick={handleStop} />
+          ) : (
+            <Volume2 size={16} />
+          )}
         </button>
-        
-        {showLanguages && !isSpeaking && availableLanguages.length > 0 && (
-          <div className="absolute bottom-full left-0 mb-2 bg-white border rounded-lg shadow-lg py-1 min-w-[150px] z-50">
-            {availableLanguages.map((lang) => (
+
+        {/* Sprachen-Dropdown */}
+        {showLanguages && !isSpeaking && (
+          <div className="absolute bottom-full mb-2 left-0 bg-white shadow-lg rounded-lg py-1 min-w-[150px] z-10">
+            {languages.map((lang) => (
               <button
                 key={lang.code}
-                onClick={() => handleSpeak(lang)}
-                className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 transition-colors flex items-center justify-between"
+                onClick={() => {
+                  speak(content, lang.code);
+                  setShowLanguages(false);
+                }}
+                className="w-full text-left px-4 py-2 hover:bg-gray-100 text-sm"
               >
-                <span>{lang.name}</span>
-                <span className="text-xs text-gray-500">
-                  ({lang.voices.length})
-                </span>
+                {lang.name}
               </button>
             ))}
           </div>

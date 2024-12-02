@@ -6,10 +6,32 @@ interface ModelDetails {
 }
 
 export function ModelStatus({ currentModel }: { currentModel: string }) {
-  const [modelInfo, setModelInfo] = useState<ModelDetails>({ 
-    status: 'checking', 
-    message: 'Prüfe Modell...' 
+  const [modelInfo, setModelInfo] = useState<ModelDetails>({
+    status: 'checking',
+    message: 'Prüfe Modell...'
   });
+
+  useEffect(() => {
+    const logGermanVoices = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const germanVoices = voices.filter(voice => voice.lang.includes('de'));
+      console.log('Verfügbare deutsche Stimmen:', germanVoices.map(voice => ({
+        name: voice.name,
+        lang: voice.lang,
+        default: voice.default
+      })));
+    };
+
+    // Initial ausführen
+    logGermanVoices();
+    
+    // Event Listener für nachgeladene Stimmen
+    window.speechSynthesis.addEventListener('voiceschanged', logGermanVoices);
+    
+    return () => {
+      window.speechSynthesis.removeEventListener('voiceschanged', logGermanVoices);
+    };
+  }, []);
 
   useEffect(() => {
     const checkModel = async () => {
@@ -21,7 +43,11 @@ export function ModelStatus({ currentModel }: { currentModel: string }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: currentModel,
-            prompt: `Beschreibe in wenigenSätzen, was für ein KI-Modell du bist und was deine Hauptstärken sind. Beginne mit 'Ich bin ein'`,
+            prompt: `Beschreibe objektiv und faktenbasiert:
+            1. Welches KI-Sprachmodell Du bist
+            2. Von welchem Unternehmen Du entwickelt wurdest
+            3. Was Deine Hauptfähigkeiten sind
+            Halte die Antwort kurz und sachlich.`,
             stream: false
           })
         });
@@ -31,7 +57,6 @@ export function ModelStatus({ currentModel }: { currentModel: string }) {
         }
 
         const data = await response.json();
-        
         const cleanedResponse = data.response
           .replace(/^["']|["']$/g, '')
           .replace(/\.$/, '')
