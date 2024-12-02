@@ -10,7 +10,12 @@ export function useChat() {
   });
 
   const sendMessage = useCallback(async (content: string) => {
-    const userMessage: Message = { role: 'user', content };
+    const startTime = Date.now();
+    const userMessage: Message = { 
+      role: 'user', 
+      content,
+      timestamp: new Date()
+    };
     
     setChatState(prev => ({
       ...prev,
@@ -20,9 +25,13 @@ export function useChat() {
 
     try {
       const response = await generateResponse(content);
+      const processingTime = Date.now() - startTime;
+      
       const botMessage: Message = {
         role: 'assistant',
         content: response,
+        timestamp: new Date(),
+        processingTime
       };
 
       setChatState(prev => ({
