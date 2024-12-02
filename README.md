@@ -1,32 +1,52 @@
 # Ollama Web UI
 
-A web-based user interface for interacting with Ollama models.
+Eine Web-basierte Benutzeroberfläche für die Interaktion mit Ollama-Modellen.
 
-## Setup & Running
+## Features
 
-1. Start Ollama with CORS enabled:
+- Echtzeit-Chat-Interface
+- Mehrsprachige Sprachausgabe (DE, EN, FR, ES, IT)
+- PDF-Analyse und Webseiten-Integration
+- Modellstatus-Überwachung
+- Responsive Design
+- Fehlerbehandlung und Wiederherstellung
+- Markdown-Unterstützung
+- Code-Highlighting
+- Kopieren und Regenerieren von Antworten
+
+## Setup & Ausführung
+
+1. Ollama mit CORS starten:
    ```bash
    OLLAMA_ORIGINS=* ollama serve
    ```
 
-2. Start the web UI:
+2. Web UI starten:
    ```bash
    npm install
    npm run dev
    ```
 
-3. Open your browser to the provided URL (usually http://localhost:5173)
+3. PDF-Server starten (optional):
+   ```bash
+   cd server
+   npm install
+   npm start
+   ```
 
-## Features
+4. Browser öffnen unter der angezeigten URL (standardmäßig http://localhost:5173)
 
-- Real-time chat interface
-- Connection status monitoring
-- Support for Qwen 2.5 Coder model
-- Responsive design
-- Error handling and recovery
-
-## Requirements
+## Anforderungen
 
 - Node.js 16+
-- Ollama installed locally
-- Qwen 2.5 Coder model pulled (`ollama pull qwen2.5-coder:32b`)
+- Ollama lokal installiert
+- Ein kompatibles Ollama-Modell (z.B. `ollama pull qwen2.5-coder:32b`)
+
+## Entwicklung
+
+- TypeScript für typsichere Entwicklung
+- React für die Benutzeroberfläche
+- Tailwind CSS für das Styling
+- Express.js für den PDF-Server
+
+## Lizenz MIT
