@@ -1,0 +1,27 @@
+.formatted-content {
+  @apply text-base leading-relaxed;
+}
+
+.formatted-content ol {
+  @apply list-decimal pl-6 my-4 space-y-2;
+}
+
+.formatted-content li {
+  @apply pl-2 mb-2;
+}
+
+.formatted-content p {
+  @apply mb-4;
+}
+
+.formatted-content code {
+  @apply px-1 py-0.5 bg-gray-100 rounded text-sm font-mono;
+}
+
+.formatted-content pre {
+  @apply p-4 bg-gray-800 text-white rounded-lg overflow-x-auto my-4;
+}
+
+.formatted-content pre code {
+  @apply bg-transparent text-white p-0;
+} 

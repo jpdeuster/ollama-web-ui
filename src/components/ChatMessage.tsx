@@ -1,48 +1,67 @@
 import React from 'react';
-import { Bot, User, Clock } from 'lucide-react';
-import { Message } from '../types/ollama';
+import { MessageActions } from './MessageActions';
+import { User, Bot } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 interface ChatMessageProps {
-  message: Message;
+  message: {
+    content: string;
+    role: 'user' | 'assistant' | 'error';
+  };
+  onRegenerate?: () => void;
 }
 
-export function ChatMessage({ message }: ChatMessageProps) {
-  const isBot = message.role === 'assistant';
-  
-  const formatTime = (date: Date) => {
-    return new Intl.DateTimeFormat('de-DE', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit'
-    }).format(date);
+export function ChatMessage({ message, onRegenerate }: ChatMessageProps) {
+  const isAssistant = message.role === 'assistant';
+  const isError = message.role === 'error';
+
+  // Formatiert den Text für bessere Lesbarkeit
+  const formatContent = (content: string) => {
+    // Ersetze nummerierte Listen mit korrekter Markdown-Formatierung
+    return content.replace(/(\d+)\.\s/g, '\n$1. ');
   };
 
-  const formatProcessingTime = (ms: number) => {
-    return `${(ms / 1000).toFixed(2)}s`;
-  };
-  
   return (
-    <div className={`flex gap-3 ${isBot ? 'bg-gray-50' : ''} p-4 transition-colors duration-200`}>
-      <div className={`w-8 h-8 flex items-center justify-center rounded-full ${
-        isBot ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-600'
-      }`}>
-        {isBot ? <Bot size={20} /> : <User size={20} />}
-      </div>
-      <div className="flex-1">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs text-gray-500">
-            {formatTime(message.timestamp)}
-          </span>
-          {message.processingTime && (
-            <span className="flex items-center gap-1 text-xs text-gray-500">
-              <Clock size={12} />
-              {formatProcessingTime(message.processingTime)}
-            </span>
-          )}
+    <div className={`p-4 ${isAssistant ? 'bg-gray-50' : 'bg-white'}`}>
+      <div className="container mx-auto max-w-4xl">
+        <div className="flex gap-4">
+          <div className="flex-shrink-0">
+            {isAssistant ? (
+              <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                <Bot className="text-white" size={20} />
+              </div>
+            ) : (
+              <div className="w-8 h-8 bg-gray-500 rounded-lg flex items-center justify-center">
+                <User className="text-white" size={20} />
+              </div>
+            )}
+          </div>
+          <div className="flex-grow">
+            <div className={`prose max-w-none ${isError ? 'text-red-500' : ''}`}>
+              <ReactMarkdown
+                className="formatted-content"
+                components={{
+                  ol: ({ children }) => (
+                    <ol className="list-decimal pl-4 space-y-2 my-4">{children}</ol>
+                  ),
+                  li: ({ children }) => (
+                    <li className="pl-2">{children}</li>
+                  ),
+                  p: ({ children }) => (
+                    <p className="mb-4">{children}</p>
+                  )
+                }}
+              >
+                {formatContent(message.content)}
+              </ReactMarkdown>
+            </div>
+            <MessageActions 
+              content={message.content}
+              onRegenerate={onRegenerate}
+              isAssistant={isAssistant}
+            />
+          </div>
         </div>
-        <p className="text-sm text-gray-900 whitespace-pre-wrap leading-relaxed">
-          {message.content}
-        </p>
       </div>
     </div>
   );
