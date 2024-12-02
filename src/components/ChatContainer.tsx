@@ -1,17 +1,17 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { ChatMessage } from './ChatMessage';
-import { ChatInput } from './ChatInput';
-import { Message } from '../types/ollama';
 import { PdfUploader } from './PdfUploader';
 import { WebSearch } from './WebSearch';
+import { ChatInput } from './ChatInput';
 
 interface ChatContainerProps {
-  messages: Message[];
+  messages: Array<{ content: string; role: 'user' | 'assistant' | 'error' }>;
   isLoading: boolean;
   onSendMessage: (message: string) => void;
+  onRegenerate: (index: number) => void;
 }
 
-export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContainerProps) {
+export function ChatContainer({ messages, isLoading, onSendMessage, onRegenerate }: ChatContainerProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -41,7 +41,11 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
         ) : (
           <div className="space-y-2">
             {messages.map((message, index) => (
-              <ChatMessage key={index} message={message} />
+              <ChatMessage 
+                key={index} 
+                message={message} 
+                onRegenerate={() => onRegenerate(index)}
+              />
             ))}
             {isLoading && (
               <div className="p-4 text-gray-500 animate-pulse">

@@ -1,5 +1,4 @@
-import React, { useEffect, useState } from 'react';
-import { Info, AlertCircle, CheckCircle, Loader, List } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
 
 interface ModelDetails {
   status: 'checking' | 'ready' | 'error';
@@ -22,7 +21,7 @@ export function ModelStatus({ currentModel }: { currentModel: string }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: currentModel,
-            prompt: "Identifiziere dich: Welches KI-Sprachmodell bist du (Name/Version)? Antworte in einem kurzen Satz.",
+            prompt: "Beschreibe in wenigenSätzen, was für ein KI-Modell du bist und was deine Hauptstärken sind. Beginne mit 'Ich bin ein'",
             stream: false
           })
         });
@@ -32,15 +31,21 @@ export function ModelStatus({ currentModel }: { currentModel: string }) {
         }
 
         const data = await response.json();
+        
+        const cleanedResponse = data.response
+          .replace(/^["']|["']$/g, '')
+          .replace(/\.$/, '')
+          .trim();
+
         setModelInfo({ 
           status: 'ready', 
-          message: data.response
+          message: cleanedResponse
         });
       } catch (error) {
         console.error('Fehler beim Abrufen der Modellinformationen:', error);
         setModelInfo({ 
           status: 'error', 
-          message: 'Modell nicht verfügbar oder Fehler bei der Verbindung' 
+          message: `${currentModel} nicht verfügbar` 
         });
       }
     };
@@ -50,64 +55,26 @@ export function ModelStatus({ currentModel }: { currentModel: string }) {
     }
   }, [currentModel]);
 
-  // Bestimme die Fähigkeiten basierend auf dem Modellnamen
-  const getCapabilities = (modelName: string) => {
-    const capabilities = [
-      'Code Generation',
-      'Technical Q&A',
-      'Text Generation',
-      'Analysis'
-    ];
-
-    // Spezifische Fähigkeiten je nach Modell
-    if (modelName.toLowerCase().includes('coder')) {
-      capabilities.push('Code Review', 'Documentation');
-    }
-    if (modelName.toLowerCase().includes('stable')) {
-      capabilities.push('Stable Responses', 'General Knowledge');
-    }
-    
-    return capabilities;
-  };
-
   return (
-    <div className={`mt-4 p-3 rounded-lg border ${
-      modelInfo.status === 'ready' ? 'bg-green-100 border-green-200' : 
-      modelInfo.status === 'error' ? 'bg-red-100 border-red-200' : 
-      'bg-gray-100 border-gray-200'
+    <div className={`p-4 rounded-lg ${
+      modelInfo.status === 'ready' 
+        ? 'bg-green-50 text-green-700' 
+        : modelInfo.status === 'error' 
+          ? 'bg-red-50 text-red-700' 
+          : 'bg-gray-50 text-gray-700'
     }`}>
-      <div className="flex items-center gap-2">
-        {modelInfo.status === 'ready' ? <CheckCircle size={16} className="text-green-500" /> :
-         modelInfo.status === 'error' ? <AlertCircle size={16} className="text-red-500" /> :
-         <Loader size={16} className="animate-spin text-gray-500" />}
-        
-        <div className="flex-1">
-          <div className="font-medium">{currentModel}</div>
-          <div className="text-sm mt-2 space-y-2">
-            <div className="flex items-start gap-1">
-              <Info size={14} className="mt-1 flex-shrink-0" />
-              <span className="text-gray-700">{modelInfo.message}</span>
-            </div>
-          </div>
-
-          {modelInfo.status === 'ready' && (
-            <div className="mt-3">
-              <div className="flex items-center gap-1 text-gray-600">
-                <List size={14} />
-                <span className="font-semibold">Typische Anwendungen:</span>
-              </div>
-              <div className="mt-1 flex flex-wrap gap-2">
-                {getCapabilities(currentModel).map((capability, index) => (
-                  <span 
-                    key={index}
-                    className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs"
-                  >
-                    {capability}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
+      <div className="flex items-start gap-2">
+        <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-2 ${
+          modelInfo.status === 'ready' 
+            ? 'bg-green-500' 
+            : modelInfo.status === 'error' 
+              ? 'bg-red-500' 
+              : 'bg-gray-500'
+        }`} />
+        <div className="flex-grow">
+          <p className="text-sm leading-relaxed break-words">
+            {modelInfo.message}
+          </p>
         </div>
       </div>
     </div>

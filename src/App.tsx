@@ -69,6 +69,26 @@ function App() {
     }
   };
 
+  const regenerateResponse = async (messageIndex: number) => {
+    try {
+      // Finde die letzte Benutzernachricht vor diesem Index
+      let userMessageIndex = messageIndex - 1;
+      while (userMessageIndex >= 0 && messages[userMessageIndex].role !== 'user') {
+        userMessageIndex--;
+      }
+
+      if (userMessageIndex >= 0) {
+        const userMessage = messages[userMessageIndex].content;
+        // Entferne alle Nachrichten nach der Benutzernachricht
+        setMessages(prev => prev.slice(0, messageIndex));
+        // Generiere neue Antwort
+        await handleSendMessage(userMessage);
+      }
+    } catch (error) {
+      console.error('Fehler beim Regenerieren der Antwort:', error);
+    }
+  };
+
   return (
     <Router>
       <Routes>
@@ -88,6 +108,7 @@ function App() {
                 messages={messages}
                 isLoading={isLoading}
                 onSendMessage={handleSendMessage}
+                onRegenerate={regenerateResponse}
               />
             </main>
             <Footer />
