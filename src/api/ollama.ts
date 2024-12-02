@@ -82,3 +82,17 @@ export async function checkModelAvailability(): Promise<boolean> {
     return false;
   }
 }
+
+export async function fetchAvailableModels(): Promise<string[]> {
+  try {
+    const response = await fetch('/api/tags');
+    if (!response.ok) {
+      throw new Error('Fehler beim Abrufen der Modelle');
+    }
+    const data = await response.json();
+    return data.models.map((model: any) => model.name);
+  } catch (error) {
+    console.error('Fehler beim Laden der Modelle:', error);
+    throw error;
+  }
+}

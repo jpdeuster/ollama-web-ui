@@ -3,7 +3,7 @@ import { Message, ChatState } from '../types/ollama';
 import { generateResponse, OllamaError } from '../api/ollama';
 import { CURRENT_MODEL } from '../config/models';
 
-export function useChat() {
+export function useChat(model: string) {
   const [chatState, setChatState] = useState<ChatState>({
     messages: [],
     isLoading: false,
@@ -24,7 +24,7 @@ export function useChat() {
     }));
 
     try {
-      const response = await generateResponse(content);
+      const response = await generateResponse(content, model);
       const processingTime = Date.now() - startTime;
       
       const botMessage: Message = {
@@ -56,7 +56,7 @@ export function useChat() {
         }],
       }));
     }
-  }, []);
+  }, [model]);
 
   return {
     messages: chatState.messages,
