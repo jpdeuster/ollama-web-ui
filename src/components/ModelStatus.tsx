@@ -21,7 +21,7 @@ export function ModelStatus({ currentModel }: { currentModel: string }) {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             model: currentModel,
-            prompt: "Beschreibe in wenigenSätzen, was für ein KI-Modell du bist und was deine Hauptstärken sind. Beginne mit 'Ich bin ein'",
+            prompt: `Beschreibe in wenigenSätzen, was für ein KI-Modell du bist und was deine Hauptstärken sind. Beginne mit 'Ich bin ein'`,
             stream: false
           })
         });
@@ -72,9 +72,9 @@ export function ModelStatus({ currentModel }: { currentModel: string }) {
               : 'bg-gray-500'
         }`} />
         <div className="flex-grow">
-          <p className="text-sm leading-relaxed break-words">
+          <pre className="whitespace-pre-wrap text-sm leading-relaxed font-sans">
             {modelInfo.message}
-          </p>
+          </pre>
         </div>
       </div>
     </div>
