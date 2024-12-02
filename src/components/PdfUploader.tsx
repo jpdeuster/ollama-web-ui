@@ -3,7 +3,7 @@ import { FileUp, Loader } from 'lucide-react';
 import { parsePdfFile } from '../api/pdf';
 
 interface PdfUploaderProps {
-  onPdfContent: (content: string) => void;
+  onPdfContent: (content: string, source: 'PDF' | 'Web') => void;
 }
 
 export function PdfUploader({ onPdfContent }: PdfUploaderProps) {
@@ -38,7 +38,7 @@ export function PdfUploader({ onPdfContent }: PdfUploaderProps) {
     try {
       const text = await parsePdfFile(file);
       const processingTime = ((Date.now() - startTime) / 1000).toFixed(2);
-      onPdfContent(`PDF "${file.name}" (${formatFileSize(file.size)}) wurde in ${processingTime}s verarbeitet:\n\n${text}`);
+      onPdfContent(`PDF "${file.name}" (${formatFileSize(file.size)}) wurde in ${processingTime}s verarbeitet:\n\n${text}`, 'PDF');
     } catch (err) {
       setError(`Fehler beim Verarbeiten der PDF: ${err instanceof Error ? err.message : 'Unbekannter Fehler'}`);
     } finally {

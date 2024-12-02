@@ -5,6 +5,7 @@ import { ConnectionStatus } from './components/ConnectionStatus';
 import { ModelStatus } from './components/ModelStatus';
 import { useChat } from './hooks/useChat';
 import { fetchAvailableModels } from './api/ollama';
+import { Footer } from './components/Footer';
 
 function App() {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -37,14 +38,14 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen flex flex-col">
       <Header
         availableModels={availableModels}
         currentModel={currentModel}
         isLoading={isLoadingModels}
         onModelChange={handleModelChange}
       />
-      <main className="container mx-auto max-w-4xl p-4 space-y-4">
+      <main className="flex-1 container mx-auto max-w-4xl p-4 space-y-4">
         <ConnectionStatus />
         {currentModel && <ModelStatus currentModel={currentModel} />}
         <ChatContainer
@@ -53,6 +54,7 @@ function App() {
           onSendMessage={sendMessage}
         />
       </main>
+      <Footer />
     </div>
   );
 }

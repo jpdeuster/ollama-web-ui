@@ -4,6 +4,8 @@ import cors from 'cors';
 import { createServer } from 'http';
 import { AddressInfo } from 'net';
 import * as pdfjsLib from 'pdfjs-dist';
+import axios from 'axios';
+import * as cheerio from 'cheerio';
 
 const app = express();
 const server = createServer(app);
@@ -22,7 +24,8 @@ app.get('/', (req, res) => {
     endpoints: {
       health: '/health',
       version: '/api/version',
-      pdfUpload: '/api/upload-pdf'
+      pdfUpload: '/api/upload-pdf',
+      webSearch: '/api/websearch'
     },
     documentation: 'PDF Upload und Verarbeitungsserver'
   });
@@ -97,6 +100,42 @@ app.post('/api/upload-pdf', upload.single('pdf'), async (req, res) => {
     console.error('Server Fehler:', error);
     res.status(500).json({ 
       error: 'Server Fehler',
+      details: error instanceof Error ? error.message : 'Unbekannter Fehler'
+    });
+  }
+});
+
+// Web Search Endpoint
+app.post('/api/websearch', async (req, res) => {
+  const { url } = req.body;
+
+  if (!url) {
+    return res.status(400).json({ error: 'URL ist erforderlich' });
+  }
+
+  try {
+    const response = await axios.get(url);
+    const $ = cheerio.load(response.data);
+    
+    // Entferne Scripts, Styles und andere unwichtige Elemente
+    $('script').remove();
+    $('style').remove();
+    $('head').remove();
+    
+    // Extrahiere den Text
+    const text = $('body')
+      .text()
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    res.json({ 
+      content: text,
+      url: url
+    });
+  } catch (error) {
+    console.error('Fehler beim Abrufen der Webseite:', error);
+    res.status(500).json({ 
+      error: 'Fehler beim Abrufen der Webseite',
       details: error instanceof Error ? error.message : 'Unbekannter Fehler'
     });
   }

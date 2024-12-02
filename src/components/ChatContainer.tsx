@@ -3,6 +3,7 @@ import { ChatMessage } from './ChatMessage';
 import { ChatInput } from './ChatInput';
 import { Message } from '../types/ollama';
 import { PdfUploader } from './PdfUploader';
+import { WebSearch } from './WebSearch';
 
 interface ChatContainerProps {
   messages: Message[];
@@ -21,13 +22,17 @@ export function ChatContainer({ messages, isLoading, onSendMessage }: ChatContai
     scrollToBottom();
   }, [messages]);
 
-  const handlePdfContent = (content: string) => {
-    onSendMessage(`Bitte analysiere folgenden Text aus meiner PDF-Datei:\n\n${content}`);
+  const handleContent = (content: string, source: 'PDF' | 'Web') => {
+    const sourceText = source === 'PDF' ? 'meiner PDF-Datei' : 'der Webseite';
+    onSendMessage(`Bitte analysiere folgenden Text aus ${sourceText}:\n\n${content}`);
   };
 
   return (
     <div className="bg-white rounded-lg shadow-sm border min-h-[600px] flex flex-col">
-      <PdfUploader onPdfContent={handlePdfContent} />
+      <div className="grid grid-cols-2 gap-4 p-4">
+        <PdfUploader onPdfContent={(content) => handleContent(content, 'PDF')} />
+        <WebSearch onSearchResult={(content) => handleContent(content, 'Web')} />
+      </div>
       <div className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <div className="h-full flex items-center justify-center text-gray-500">
