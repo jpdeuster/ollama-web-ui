@@ -5,7 +5,7 @@ import { WebSearch } from './WebSearch';
 import { ChatInput } from './ChatInput';
 
 interface ChatContainerProps {
-  messages: Array<{ content: string; role: 'user' | 'assistant' | 'error' }>;
+  messages: Array<{ content: string; role: 'user' | 'assistant' | 'error'; timestamp: string; duration?: string }>;
   isLoading: boolean;
   onSendMessage: (message: string) => void;
   onRegenerate: (index: number) => void;
@@ -39,13 +39,21 @@ export function ChatContainer({ messages, isLoading, onSendMessage, onRegenerate
             <p>Start a conversation with Ollama</p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="flex flex-col space-y-4">
             {messages.map((message, index) => (
-              <ChatMessage 
-                key={index} 
-                message={message} 
-                onRegenerate={() => onRegenerate(index)}
-              />
+              <div key={index} className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}>
+                <div className="max-w-3/4 bg-white rounded-lg p-4 shadow">
+                  <div className="text-xs text-gray-500 mb-1 flex justify-between">
+                    <span>{message.timestamp}</span>
+                    {message.duration && (
+                      <span className="ml-2">Generierungszeit: {message.duration}</span>
+                    )}
+                  </div>
+                  <div className="prose">
+                    {message.content}
+                  </div>
+                </div>
+              </div>
             ))}
             {isLoading && (
               <div className="p-4 text-gray-500 animate-pulse">

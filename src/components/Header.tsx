@@ -1,6 +1,7 @@
-import React from 'react';
-import { Bot, Code2, Terminal } from 'lucide-react';
+import React, { useState } from 'react';
+import { Bot, Code2, Activity } from 'lucide-react';
 import { ModelSelector } from './ModelSelector';
+import { SystemCheck } from './SystemCheck';
 
 interface HeaderProps {
   availableModels: string[];
@@ -10,6 +11,8 @@ interface HeaderProps {
 }
 
 export function Header({ availableModels, currentModel, isLoading, onModelChange }: HeaderProps) {
+  const [showSystemCheck, setShowSystemCheck] = useState(false);
+
   return (
     <header className="bg-gradient-to-r from-gray-800 to-gray-900 text-white py-6 shadow-lg">
       <div className="container mx-auto px-4">
@@ -34,6 +37,17 @@ export function Header({ availableModels, currentModel, isLoading, onModelChange
             </div>
           </div>
 
+          {/* Mittlerer Bereich - System-Check Button */}
+          <div className="flex items-center mx-4">
+            <button
+              onClick={() => setShowSystemCheck(!showSystemCheck)}
+              className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+            >
+              <Activity size={16} />
+              <span>System-Status</span>
+            </button>
+          </div>
+
           {/* Rechte Seite - Modellauswahl */}
           <div className="flex flex-col items-center md:items-end gap-2">
             <ModelSelector
@@ -48,21 +62,12 @@ export function Header({ availableModels, currentModel, isLoading, onModelChange
           </div>
         </div>
 
-        {/* Statistiken/Badges */}
-        <div className="mt-3 flex justify-center md:justify-start gap-4 text-xs text-gray-400">
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-green-500"></div>
-            <span>Verfügbar</span>
+        {/* System-Check Dropdown */}
+        {showSystemCheck && (
+          <div className="mt-4 bg-gray-700 rounded-lg p-4 shadow-lg">
+            <SystemCheck />
           </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-            <span>Code-Optimiert</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <div className="w-2 h-2 rounded-full bg-purple-500"></div>
-            <span>Multi-Language Support</span>
-          </div>
-        </div>
+        )}
       </div>
     </header>
   );

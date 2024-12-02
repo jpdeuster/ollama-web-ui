@@ -9,6 +9,7 @@ import { Nutzungsbedingungen } from './components/legal/Nutzungsbedingungen';
 import { LegalHeader } from './components/legal/LegalHeader';
 import { fetchAvailableModels } from './api/ollama';
 import { ModelStatus } from './components/ModelStatus';
+import { SystemCheck } from './components/SystemCheck';
 
 function App() {
   const [availableModels, setAvailableModels] = useState<string[]>([]);
@@ -34,8 +35,15 @@ function App() {
   const handleSendMessage = async (message: string) => {
     try {
       setIsLoading(true);
+      const startTime = new Date();
+      const startTimeStr = startTime.toLocaleTimeString('de-DE');
+      
       // Benutzer-Nachricht zum Chat hinzufügen
-      setMessages(prev => [...prev, { content: message, role: 'user' }]);
+      setMessages(prev => [...prev, { 
+        content: message, 
+        role: 'user',
+        timestamp: startTimeStr
+      }]);
 
       // Nachricht an Ollama senden
       const response = await fetch('/api/generate', {
@@ -50,6 +58,13 @@ function App() {
         }),
       });
 
+      const endTime = new Date();
+      const endTimeStr = endTime.toLocaleTimeString('de-DE');
+      const duration = endTime.getTime() - startTime.getTime();
+      const seconds = Math.floor(duration / 1000);
+      const milliseconds = duration % 1000;
+      const responseTime = `${seconds}s ${milliseconds}ms`;
+
       if (!response.ok) {
         throw new Error('Fehler bei der Kommunikation mit Ollama');
       }
@@ -57,12 +72,18 @@ function App() {
       const data = await response.json();
       
       // Ollama-Antwort zum Chat hinzufügen
-      setMessages(prev => [...prev, { content: data.response, role: 'assistant' }]);
+      setMessages(prev => [...prev, { 
+        content: data.response, 
+        role: 'assistant',
+        timestamp: endTimeStr,
+        duration: responseTime
+      }]);
     } catch (error) {
       console.error('Fehler beim Senden der Nachricht:', error);
       setMessages(prev => [...prev, { 
         content: 'Es ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut.', 
-        role: 'error' 
+        role: 'error',
+        timestamp: new Date().toLocaleTimeString('de-DE')
       }]);
     } finally {
       setIsLoading(false);
